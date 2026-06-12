@@ -16,10 +16,10 @@ interface ListaAlunosProps {
 
 
 
-export function ListaAlunos({ alunos, onSelect, onDelete }: ListaAlunosProps) {
+export function ListaAlunos({ alunos, onSelect }: ListaAlunosProps) {
     const [alunoBuscado, setAlunoBuscado] = useState<Aluno[]>([]);
     const [search, setSearch] = useState('');
-    const { fetchAlunos, loading, error } = useAlunos();
+    const { loading, error } = useAlunos();
 
 
 
@@ -45,33 +45,34 @@ export function ListaAlunos({ alunos, onSelect, onDelete }: ListaAlunosProps) {
         return () => clearTimeout(timeout); // limpa timeout se digitar de novo
     }, [search]);
 
-
-    const inativarAluno = async (id: any) => {
-        const { error } = await supabase
-            .from('alunos')
-            .update({ ativo: false })
-            .eq('id', id)
-
-        if (error) {
-            console.error(error)
-        } else {
-            fetchAlunos(true)// recarrega lista de ativos
+    /*
+        const inativarAluno = async (id: any) => {
+            const { error } = await supabase
+                .from('alunos')
+                .update({ ativo: false })
+                .eq('id', id)
+    
+            if (error) {
+                console.error(error)
+            } else {
+                fetchAlunos(true)// recarrega lista de ativos
+            }
         }
-    }
-
-
-    const reativarAluno = async (id: any) => {
-        const { error } = await supabase
-            .from('alunos')
-            .update({ ativo: true })
-            .eq('id', id);
-
-        if (error) {
-            console.error(error)
-        } else {
-            fetchAlunos(false)
+    
+    
+        const reativarAluno = async (id: any) => {
+            const { error } = await supabase
+                .from('alunos')
+                .update({ ativo: true })
+                .eq('id', id);
+    
+            if (error) {
+                console.error(error)
+            } else {
+                fetchAlunos(false)
+            }
         }
-    }
+        */
 
     if (loading) return <p>Carregando...</p>;
     if (error) return <p>Erro: {error.message}</p>;
