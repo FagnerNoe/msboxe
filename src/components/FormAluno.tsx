@@ -63,6 +63,19 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
         return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : null;
     }
 
+    function displayDate(value: string | null): string {
+        if (!value) return "";
+
+        // Caso ISO (yyyy-MM-dd)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            const [ano, mes, dia] = value.split("-");
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        // Caso já esteja em dd/MM/yyyy (digitado pelo usuário)
+        return value;
+    }
+
     // Converte yyyy-MM-dd → dd/MM/yyyy (para exibir no input)
     function maskDate(value: string): string {
         const digits = value.replace(/\D/g, "").slice(0, 8);
@@ -338,7 +351,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                             <Calendar size={16} className={`absolute left-3 top-2.5 text-primary`} />
                             <input
                                 type="text"
-                                value={formData.dataNascimento || ""}
+                                value={displayDate(formData.dataNascimento) || ''}
                                 onChange={e => {
                                     setFormData({ ...formData, dataNascimento: maskDate(e.target.value) });
                                     setErroData(""); // limpa erro enquanto digita
@@ -346,7 +359,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                                 onBlur={e => {
                                     const valido = toISODate(e.target.value);
                                     if (!valido) {
-                                        setErroData("Data inválida. Use o formato dd/mm/yyyy.");
+                                        setErroData("Data inválida.");
                                         e.target.focus(); // mantém o foco no campo
                                     }
                                 }}

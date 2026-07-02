@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import type { Aluno } from "../model/Aluno";
 import { supabase } from "../service/supabase";
 import type React from "react";
@@ -22,27 +23,59 @@ type MesProps = {
 
 
 export function Mes({ alunos, setAlunos, filter, currentMonth, currentYear, onFilterChange, onSelected }: MesProps) {
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedYear, setSelectedYear] = useState(currentYear);
 
-    function isCurrentMonthPaid(s: Aluno, currentMonth: number, currentYear: number): boolean {
+
+    useEffect(() => {
+        const fetchAlunos = async () => {
+            const { data, error } = await supabase
+                .from("alunos")
+                .select("*, pagamentos(*)") // pega alunos + pagamentos
+                .order("nome", { ascending: true });
+
+            if (error) {
+                console.error(error);
+            } else {
+                setAlunos(data);
+            }
+        };
+
+        fetchAlunos();
+    }, [selectedMonth, selectedYear]);
+
+
+    function isCurrentMonthPaid(s: Aluno, selectedMonth: number, selectedYear: number): boolean {
         const pagamentos = Array.isArray(s.pagamentos) ? s.pagamentos : [];
         return pagamentos.some(
-            p => p.mes === currentMonth && p.ano === currentYear && p.pago === true
+            p => p.mes === selectedMonth && p.ano === selectedYear && p.pago === true
         );
     }
 
+    const alunosVisiveis = alunos.filter(a => {
+        const pagamentos = Array.isArray(a.pagamentos) ? a.pagamentos : [];
+        const temPagamentoNoPeriodo = pagamentos.some(
+            p => p.mes === selectedMonth && p.ano === selectedYear
+        );
+
+        return a.ativo === true || temPagamentoNoPeriodo;
+    });
+
 
     const filterButtons: { key: FilterKey; label: string; count: number }[] = [
-        { key: "pendente", label: "Pendentes", count: alunos.filter(s => !isCurrentMonthPaid(s, currentMonth, currentYear)).length },
-        { key: "pago", label: "Pagos", count: alunos.filter(s => isCurrentMonthPaid(s, currentMonth, currentYear)).length },
-        { key: "all", label: "Todos", count: alunos.length },
+        { key: "pendente", label: "Pendentes", count: alunosVisiveis.filter(s => !isCurrentMonthPaid(s, selectedMonth, selectedYear)).length },
+        { key: "pago", label: "Pagos", count: alunosVisiveis.filter(s => isCurrentMonthPaid(s, selectedMonth, selectedYear)).length },
+        { key: "all", label: "Todos", count: alunosVisiveis.length },
     ];
+
+
 
     const alunosFiltrados =
         filter === "all"
-            ? alunos
+            ? alunosVisiveis
             : filter === "pago"
-                ? alunos.filter(s => isCurrentMonthPaid(s, currentMonth, currentYear))
-                : alunos.filter(s => !isCurrentMonthPaid(s, currentMonth, currentYear));
+                ? alunosVisiveis.filter(s => isCurrentMonthPaid(s, selectedMonth, selectedYear))
+                : alunosVisiveis.filter(s => !isCurrentMonthPaid(s, selectedMonth, selectedYear));
 
     const togglePagamento = async (alunoId: string, mes: number, ano: number, pago: boolean, valorPlano: number) => {
         const { error } = await supabase
@@ -103,9 +136,21 @@ export function Mes({ alunos, setAlunos, filter, currentMonth, currentYear, onFi
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <span className="text-md border rounded-md px-4 py-1 font-bold text-primary 
-            cursor-pointer hover:bg-primary hover:text-yellow shadow-sm shadow-yellow">Maio 2026</span>
+            <div className="flex gap-2">
+                <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))}>
+                    {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i + 1}>
+                            {new Date(0, i).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()}
+                        </option>
+                    ))}
+                </select>
 
+                <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+                    {[2025, 2026, 2027, 2028, 2029, 2030].map(y => (
+                        <option key={y} value={y}>{y}</option>
+                    ))}
+                </select>
+            </div>
 
 
             <div className="flex bg-yellow/20 rounded-xl p-1 gap-1">
@@ -128,29 +173,30 @@ export function Mes({ alunos, setAlunos, filter, currentMonth, currentYear, onFi
             </div>
             <ul className="w-full px-2 space-y-3">
                 {alunosFiltrados.map(s => {
-                    const Pago = isCurrentMonthPaid(s, currentMonth, currentYear);
+                    const Pago = isCurrentMonthPaid(s, selectedMonth, selectedYear);
 
                     return (
                         <li key={s.id}
-                            className="flex items-center border-b p-1 w-full justify-between ">
+                            className={`flex items-center border-b rounded p-1 w-full justify-between ${s.ativo ? "" : "bg-gray-300"}`}>
 
                             <span onClick={() => onSelected(s)}
-                                className="bg-primary px-2 py-1 rounded-full truncate w-27 text-white/70 text-sm">{s.nome}</span>
+                                className={`${s.ativo ? "bg-primary" : "bg-gray-500 text-white/40"} px-2 py-1 rounded-full truncate w-27 text-white text-sm`}>{s.nome}</span>
 
                             <div className="flex items-center space-x-3">
 
                                 <span className="ml-3 text-xs font-medium">
-                                    {Pago ? "Pago" : "Pendente"}
+                                    {isCurrentMonthPaid(s, selectedMonth, selectedYear) ? "Pago" : "Pendente"}
                                 </span>
                                 <label className="inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={Pago}
-                                        onChange={() => togglePagamento(s.id, currentMonth, currentYear, !Pago, s.planos?.valor ?? 0)}
+                                        disabled={!s.ativo}
+                                        onChange={() => togglePagamento(s.id, selectedMonth, selectedYear, !Pago, s.planos?.valor ?? 0)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-yellow peer-checked:bg-primary rounded-full peer transition-colors"></div>
-                                    <div className="absolute w-5 h-5 bg-white rounded-full translate-x-1 peer-checked:translate-x-6 transition-transform"></div>
+                                    <div className={`w-11 h-6 bg-yellow ${s.ativo ? "peer-checked:bg-primary" : "peer-checked:bg-gray-500"} rounded-full peer transition-colors`}></div>
+                                    <div className={`absolute w-5 h-5 ${s.ativo ? "bg-white" : "bg-gray-300"} rounded-full translate-x-1 peer-checked:translate-x-6 transition-transform`}></div>
                                 </label>
 
                             </div>

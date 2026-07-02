@@ -1,12 +1,12 @@
 import { AlertTriangle, X } from 'lucide-react';
 
 interface DeleteModalProps {
-    studentName: string;
+    nomeAluno: string;
     onConfirm: () => void;
     onClose: () => void;
 }
 
-export default function DeleteModal({ studentName, onConfirm, onClose }: DeleteModalProps) {
+export default function DeleteModal({ nomeAluno, onConfirm, onClose }: DeleteModalProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
@@ -16,7 +16,7 @@ export default function DeleteModal({ studentName, onConfirm, onClose }: DeleteM
                     </div>
                     <h2 className="text-xl font-bold text-[#1A0A0A] mb-2">Excluir aluno?</h2>
                     <p className="text-[#6B4040] text-sm">
-                        Tem certeza que deseja excluir <span className="font-semibold text-[#3D1A0A]">{studentName}</span>?
+                        Tem certeza que deseja excluir <span className="font-semibold text-[#3D1A0A]">{nomeAluno}</span>?
                         Esta ação não pode ser desfeita.
                     </p>
                 </div>

@@ -7,12 +7,11 @@ export function useAlunos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchAlunos = async (ativo = true) => {
+  const fetchAlunos = async () => {
     setLoading(true);
     const { data, error } = await supabase.
     from("alunos")
-    .select(`*, planos (*), pagamentos (*)`)
-    .eq('ativo',ativo)
+    .select(`*, planos:planos (*), pagamentos (*)`)    
     .order('nome', { ascending: true });
     if (error) {
     setError(error);
@@ -28,7 +27,7 @@ console.log(data);
   };
 
   useEffect(() => {
-    fetchAlunos(true);
+    fetchAlunos();
   }, []);
 
   return { alunos,setAlunos, loading, error, fetchAlunos };

@@ -146,10 +146,9 @@ export default function Home() {
             {/* Content */}
             <main className="max-w-5xl mx-auto px-4 py-6">
                 {tab === 'Alunos' && (
-                    <div className="space-y-5">
-                        <div className="flex items-center justify-between">
+                    <div >
+                        <div className=" w-full flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-1 linear-to-b from-primary to-[#001F5B] rounded-full" />
                                 <h2 className="text-2xl font-bold text-primary">Meus Alunos</h2>
                             </div>
                             <button
@@ -225,7 +224,7 @@ export default function Home() {
 
             {deleteAluno && (
                 < DeleteModal
-                    studentName={deleteAluno.nome}
+                    nomeAluno={deleteAluno.nome}
                     onConfirm={handleDelete}
                     onClose={() => setDeleteAluno(null)}
                 />
