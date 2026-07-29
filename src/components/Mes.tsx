@@ -44,6 +44,27 @@ export function Mes({ alunos, setAlunos, filter, currentMonth, currentYear, onFi
         fetchAlunos();
     }, [selectedMonth, selectedYear]);
 
+    function getDataVencimento(dia: number, mes: number, ano: number) {
+        return new Date(ano, mes - 1, dia);
+    }
+
+    function verificarAtraso(aluno: Aluno, selectedMonth: number, selectedYear: number) {
+        const hoje = new Date();
+        const vencimento = getDataVencimento(
+            aluno.data_vencimento ? aluno.data_vencimento : 1,
+            selectedMonth,
+            selectedYear
+        );
+
+        // Está pendente se não há pagamento quitado para o mês/ano
+        const estaPendente = Array.isArray(aluno.pagamentos) &&
+            aluno.pagamentos.every(
+                p => !(p.mes === selectedMonth && p.ano === selectedYear && p.pago)
+            );
+
+        // Está vencido se já passou do vencimento e ainda está pendente
+        return estaPendente && hoje > vencimento;
+    }
 
     function isCurrentMonthPaid(s: Aluno, selectedMonth: number, selectedYear: number): boolean {
         const pagamentos = Array.isArray(s.pagamentos) ? s.pagamentos : [];
@@ -177,14 +198,23 @@ export function Mes({ alunos, setAlunos, filter, currentMonth, currentYear, onFi
 
                     return (
                         <li key={s.id}
-                            className={`flex items-center border-b rounded p-1 w-full justify-between ${s.ativo ? "" : "bg-gray-300"}`}>
+                            className={`flex items-center ${verificarAtraso(s, selectedMonth, selectedYear) ? "bg-danger border-2 border-danger shadow-md shadow-red-300 rounded-full" : "border-b"}  p-1 w-full justify-between ${s.ativo ? "" : "bg-gray-300"}`}>
 
-                            <span onClick={() => onSelected(s)}
-                                className={`${s.ativo ? "bg-primary" : "bg-gray-500 text-white/40"} px-2 py-1 rounded-full truncate w-27 text-white text-sm`}>{s.nome}</span>
+                            <div className="flex items-center gap-2 sm:w-70 ">
+                                <span onClick={() => onSelected(s)}
+                                    className={`${s.ativo ? "bg-primary" : "bg-gray-500 text-white/40"} px-2 py-1 rounded-full truncate w-35 sm:max-w-max md:w-100   text-white text-sm`}>{s.nome}</span>
+                            </div>
+
+                            {!Pago && (
+                                <div className="flex items-center gap-0.5">
+                                    <p className="text-[0.5rem] sm:text-sm text-gray-400">Dia</p>
+                                    <span className="text-xs sm:text-lg bg-gray-200 rounded-full px-2 font-bold">{s.data_vencimento} </span>
+                                </div>
+                            )}
 
                             <div className="flex items-center space-x-3">
 
-                                <span className="ml-3 text-xs font-medium">
+                                <span className="ml-3 text-xs font-medium ">
                                     {isCurrentMonthPaid(s, selectedMonth, selectedYear) ? "Pago" : "Pendente"}
                                 </span>
                                 <label className="inline-flex items-center cursor-pointer">

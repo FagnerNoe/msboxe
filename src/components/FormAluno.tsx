@@ -30,11 +30,13 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
     useEffect(() => {
         if (aluno) {
             setFormData({
+                ...formData,
                 nome: aluno.nome,
-                dataNascimento: aluno.data_nascimento,
+                dataNascimento: displayDate(aluno.data_nascimento || ''),
                 telefone: aluno.telefone,
                 endereco: aluno.endereco,
                 tipoPlano: aluno.plano_id,
+                data_vencimento: aluno.data_vencimento,
             });
             setPreview(aluno.foto_url);
         } else {
@@ -44,6 +46,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                 telefone: '',
                 endereco: '',
                 tipoPlano: '',
+                data_vencimento: '',
             });
             setPreview(null);
         }
@@ -154,7 +157,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
 
         // Validação simples
         if (!formData.nome || !formData.tipoPlano) {
-            alert("Por favor, preencha pelo menos o nome e o plano.");
+            alert(" Preencha pelo menos o nome e o plano.");
             return; // interrompe o fluxo
         }
         setLoading(true);
@@ -187,7 +190,9 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                     .getPublicUrl(filePath).data.publicUrl;
             }
 
-            const isoDate = toISODate(formData.dataNascimento);
+            const isoDate = formData.dataNascimento ? toISODate(formData.dataNascimento) : aluno?.data_nascimento;
+
+
             if (aluno) {
                 const updateData: any = {
                     nome: formData.nome,
@@ -195,7 +200,9 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                     telefone: formData.telefone,
                     endereco: formData.endereco,
                     plano_id: formData.tipoPlano,
+                    data_vencimento: formData.data_vencimento,
                 }
+                if (isoDate) updateData.data_nascimento = isoDate;
                 if (fotoUrl) updateData.foto_url = fotoUrl;
 
                 const { data: updateAluno, error: updateError } = await supabase
@@ -218,6 +225,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                         telefone: formData.telefone,
                         endereco: formData.endereco,
                         plano_id: formData.tipoPlano,
+                        data_vencimento: formData.data_vencimento,
                         foto_url: fotoUrl
                     })
                     .select(`*,planos(nome)`)
@@ -428,6 +436,21 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                             ))}
                         </div>
 
+                    </div>
+
+                    <div className='flex items-center gap-x-10'>
+                        <label className="block text-sm font-semibold text-primary">Dia de Vencimento</label>
+                        <div className="w-20">
+                            <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={formData.data_vencimento || 1}
+                                onChange={e => setFormData({ ...formData, data_vencimento: e.target.value })}
+                                placeholder="Ex: 15"
+                                className="w-full text-center pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition "
+                            />
+                        </div>
                     </div>
 
 

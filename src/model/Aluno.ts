@@ -9,6 +9,7 @@ export interface Aluno {
   data_nascimento?: string;
   foto_url:string;
   plano_id: string;
+  data_vencimento:number;
   planos?:Plano;
   slug:string;
   pagamentos: Pagamento[];
