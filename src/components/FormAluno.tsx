@@ -445,7 +445,7 @@ export default function AlunoForm({ aluno, onClose, onSaved }: AlunoFormProps) {
                                 type="number"
                                 min="1"
                                 max="31"
-                                value={formData.data_vencimento || 1}
+                                value={formData.data_vencimento || ''}
                                 onChange={e => setFormData({ ...formData, data_vencimento: e.target.value })}
                                 placeholder="Ex: 15"
                                 className="w-full text-center pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary transition "
